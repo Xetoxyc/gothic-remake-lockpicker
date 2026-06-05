@@ -4,7 +4,7 @@ import { mountChestPanel, saveChestFromPanel } from './game/chestPanel'
 import { mountLockCards, updateLockCards } from './game/lockCards'
 import { solveLock, type SolveMove } from './game/solver'
 import { renderSolution } from './game/solutionPanel'
-import { createGameState, MIN_GATE_COUNT, MAX_GATE_COUNT } from './game/types'
+import { clampGateCount, createGameState } from './game/types'
 
 const state = createGameState()
 let cachedSolutionMoves: SolveMove[] | undefined
@@ -12,9 +12,13 @@ let cachedSolutionMoves: SolveMove[] | undefined
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <main class="layout">
   <section class="game-area" aria-label="Game area">
-    <label class="gate-toggle">
-      <input type="checkbox" id="five-gate" />
-      <span>5-gate lock (uncheck for 6 gates)</span>
+    <label class="gate-select">
+      <span>Gates</span>
+      <select id="gate-count" aria-label="Number of gates">
+        <option value="4">4 gates</option>
+        <option value="5">5 gates</option>
+        <option value="6" selected>6 gates</option>
+      </select>
     </label>
     <div id="lock-cards"></div>
   </section>
@@ -29,10 +33,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 const lockCardsEl = document.querySelector<HTMLDivElement>('#lock-cards')!
 const chestPanelEl = document.querySelector<HTMLDivElement>('#chest-panel')!
 const inputsEl = document.querySelector<HTMLUListElement>('#inputs')!
-const fiveGateEl = document.querySelector<HTMLInputElement>('#five-gate')!
+const gateCountEl = document.querySelector<HTMLSelectElement>('#gate-count')!
 
-function syncGateToggle(): void {
-  fiveGateEl.checked = state.gateCount === MIN_GATE_COUNT
+function syncGateSelect(): void {
+  gateCountEl.value = String(clampGateCount(state.gateCount))
 }
 
 function refreshCards(): void {
@@ -41,7 +45,7 @@ function refreshCards(): void {
 
 function handleChestLoad(chest?: ChestRecord): void {
   cachedSolutionMoves = chest?.solutionMoves
-  syncGateToggle()
+  syncGateSelect()
   remountCards()
   if (cachedSolutionMoves !== undefined) {
     renderSolution(inputsEl, { ok: true, moves: cachedSolutionMoves })
@@ -70,14 +74,14 @@ function remountCards(): void {
   })
 }
 
-fiveGateEl.addEventListener('change', () => {
-  state.gateCount = fiveGateEl.checked ? MIN_GATE_COUNT : MAX_GATE_COUNT
+gateCountEl.addEventListener('change', () => {
+  state.gateCount = clampGateCount(Number(gateCountEl.value))
   cachedSolutionMoves = undefined
   inputsEl.innerHTML = ''
   remountCards()
 })
 
-syncGateToggle()
+syncGateSelect()
 remountCards()
 
 mountChestPanel(chestPanelEl, {

@@ -63,10 +63,10 @@ ul {
   overflow-y: auto;
 }
 
-.gate-toggle {
+.gate-select {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   width: 100%;
   max-width: 900px;
   margin-bottom: 1rem;
@@ -76,12 +76,16 @@ ul {
   background: var(--panel);
   font-size: 0.8125rem;
   color: var(--text-muted);
-  cursor: pointer;
 }
 
-.gate-toggle input {
+.gate-select select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8125rem;
   cursor: pointer;
-  accent-color: var(--accent);
 }
 
 #lock-cards {

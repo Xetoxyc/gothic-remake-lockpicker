@@ -6,7 +6,7 @@ A browser-based solver for the Gothic 1 / Gothic Remake lockpicking minigame. Se
 
 ## Features
 
-- **6 or 5 gates** — toggle at the top for locks with only five tumblers
+- **4, 5, or 6 gates** — select at the top to match the lock you are solving
 - **Shortest solution** — bounded BFS finds the minimum number of clicks under hard-wall rules (pins stop at holes 1 and 7, no wraparound)
 - **Card links** — direct one-hop links: Same (S) or Opposite (O) between any two gates
 - **Chest save/load** — name and store lock setups for later
@@ -17,7 +17,7 @@ A browser-based solver for the Gothic 1 / Gothic Remake lockpicking minigame. Se
 1. **Start pin** — left-click a hole (inner ring)
 2. **Correct pin** — right-click a hole (outer ring); new locks default to hole 4
 3. **Links** — click cells in the grid next to each gate: empty → S → O
-4. **5-gate lock** — check the box at the top if the lock has only five gates
+4. **Gate count** — pick 4, 5, or 6 gates at the top to match the lock
 5. **Solve** — click the button below the gates; the move list appears on the right
 
 Moves are shown as `gate - direction` (e.g. `3 - left` = slide gate 3 left).

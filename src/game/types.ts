@@ -1,5 +1,5 @@
 export const CARD_COUNT = 6 // maximum number of gates we keep state for
-export const MIN_GATE_COUNT = 5
+export const MIN_GATE_COUNT = 4
 export const MAX_GATE_COUNT = CARD_COUNT
 export const HOLE_COUNT = 7
 export const DEFAULT_SOLUTION_PIN = 3 // hole 4
@@ -13,8 +13,8 @@ export type CardState = {
 }
 
 export type GameState = {
-  // Number of active gates (5 or 6). We always keep CARD_COUNT cards/links in
-  // memory so toggling between 5 and 6 never loses data; only the first
+  // Number of active gates (4, 5, or 6). We always keep CARD_COUNT cards/links
+  // in memory so changing the gate count never loses data; only the first
   // gateCount entries are rendered and solved.
   gateCount: number
   cards: CardState[]

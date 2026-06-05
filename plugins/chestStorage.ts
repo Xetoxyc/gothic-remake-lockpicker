@@ -56,7 +56,7 @@ function isValidChest(data: unknown): data is ChestRecord {
   if (!Array.isArray(chest.initialPins)) return false
 
   const gateCount = chest.initialPins.length
-  if (gateCount < 5 || gateCount > 6) return false
+  if (gateCount < 4 || gateCount > 6) return false
 
   if (chest.gateCount !== undefined && chest.gateCount !== gateCount) return false
   if (!Array.isArray(chest.solutionPins) || chest.solutionPins.length !== gateCount) {
