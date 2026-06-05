@@ -1,0 +1,179 @@
+{
+  "name": "Huno",
+  "initialPins": [
+    4,
+    7,
+    7,
+    4,
+    7,
+    2
+  ],
+  "solutionPins": [
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "links": [
+    [
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    [
+      "none",
+      "none",
+      "none",
+      "same",
+      "none",
+      "none"
+    ],
+    [
+      "none",
+      "none",
+      "none",
+      "none",
+      "opposite",
+      "none"
+    ],
+    [
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    [
+      "same",
+      "opposite",
+      "none",
+      "opposite",
+      "none",
+      "opposite"
+    ],
+    [
+      "none",
+      "same",
+      "none",
+      "same",
+      "none",
+      "none"
+    ]
+  ],
+  "solutionMoves": [
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    }
+  ]
+}

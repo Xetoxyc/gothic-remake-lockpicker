@@ -1,0 +1,191 @@
+{
+  "name": "Arena",
+  "initialPins": [
+    1,
+    2,
+    3,
+    1,
+    6,
+    5
+  ],
+  "solutionPins": [
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "links": [
+    [
+      "none",
+      "none",
+      "same",
+      "none",
+      "none",
+      "none"
+    ],
+    [
+      "opposite",
+      "none",
+      "none",
+      "none",
+      "same",
+      "none"
+    ],
+    [
+      "same",
+      "none",
+      "none",
+      "none",
+      "same",
+      "none"
+    ],
+    [
+      "opposite",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    [
+      "opposite",
+      "none",
+      "same",
+      "none",
+      "none",
+      "opposite"
+    ],
+    [
+      "none",
+      "none",
+      "opposite",
+      "none",
+      "none",
+      "none"
+    ]
+  ],
+  "solutionMoves": [
+    {
+      "card": 3,
+      "direction": "left"
+    },
+    {
+      "card": 1,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 1,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "left"
+    },
+    {
+      "card": 1,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "left"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "left"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "left"
+    },
+    {
+      "card": 1,
+      "direction": "right"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    },
+    {
+      "card": 6,
+      "direction": "right"
+    }
+  ]
+}
