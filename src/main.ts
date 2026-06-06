@@ -58,6 +58,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <option value="4">4 gates</option>
         <option value="5">5 gates</option>
         <option value="6" selected>6 gates</option>
+        <option value="7">7 gates</option>
       </select>
     </label>
     <div id="lock-cards"></div>

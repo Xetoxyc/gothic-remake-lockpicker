@@ -1,5 +1,5 @@
 import { getMoveDeltas, type Direction } from './movement'
-import { CARD_COUNT, HOLE_COUNT, type GameState, type LinkType } from './types'
+import { DEFAULT_GATE_COUNT, HOLE_COUNT, type GameState, type LinkType } from './types'
 
 export type SolveMove = {
   card: number
@@ -9,6 +9,10 @@ export type SolveMove = {
 export type SolveResult =
   | { ok: true; moves: SolveMove[] }
   | { ok: false; error: string }
+
+// 7-gate locks use a larger state space (7^7); use sparse maps instead of
+// pre-allocating typed arrays sized to STATE_COUNT.
+const SPARSE_BFS_GATE_COUNT = 7
 
 // Precompute the per-card shift caused by each of the (gateCount * 2) moves
 // (move index = cardIndex * 2 + (left ? 0 : 1)).
@@ -27,6 +31,24 @@ function buildMoveDeltas(links: LinkType[][], gateCount: number): number[][] {
   return moves
 }
 
+function buildPowers(gateCount: number): number[] {
+  return Array.from({ length: gateCount }, (_, i) => HOLE_COUNT ** i)
+}
+
+function encodeState(positions: number[], pow: number[]): number {
+  let code = 0
+  for (let i = 0; i < positions.length; i++) code += positions[i] * pow[i]
+  return code
+}
+
+function decodeState(code: number, gateCount: number, pow: number[]): number[] {
+  const current = new Array<number>(gateCount)
+  for (let i = 0; i < gateCount; i++) {
+    current[i] = Math.floor(code / pow[i]) % HOLE_COUNT
+  }
+  return current
+}
+
 function moveToSolveMove(moveIndex: number): SolveMove {
   return {
     card: (moveIndex >> 1) + 1,
@@ -34,11 +56,153 @@ function moveToSolveMove(moveIndex: number): SolveMove {
   }
 }
 
+function reconstructPath(
+  startCode: number,
+  targetCode: number,
+  prevState: (code: number) => number | undefined,
+  prevMove: (code: number) => number | undefined,
+): SolveMove[] {
+  const moves: SolveMove[] = []
+  let s = targetCode
+  while (s !== startCode) {
+    moves.push(moveToSolveMove(prevMove(s)!))
+    s = prevState(s)!
+  }
+  moves.reverse()
+  return moves
+}
+
+function bfsCore(
+  startCode: number,
+  targetCode: number,
+  gateCount: number,
+  pow: number[],
+  moveDeltas: number[][],
+  visited: {
+    has: (code: number) => boolean
+    add: (code: number) => void
+  },
+  record: (code: number, from: number, move: number) => void,
+  getPrev: (code: number) => { from: number; move: number } | undefined,
+): SolveResult {
+  const moveCount = gateCount * 2
+  const queue: number[] = [startCode]
+  let head = 0
+
+  visited.add(startCode)
+
+  while (head < queue.length) {
+    const code = queue[head++]
+    const current = decodeState(code, gateCount, pow)
+
+    for (let m = 0; m < moveCount; m++) {
+      const row = moveDeltas[m]
+      let legal = true
+      let nextCode = 0
+
+      for (let i = 0; i < gateCount; i++) {
+        const value = current[i] + row[i]
+        if (value < 0 || value >= HOLE_COUNT) {
+          legal = false
+          break
+        }
+        nextCode += value * pow[i]
+      }
+
+      if (!legal || visited.has(nextCode)) continue
+
+      visited.add(nextCode)
+      record(nextCode, code, m)
+
+      if (nextCode === targetCode) {
+        return {
+          ok: true,
+          moves: reconstructPath(
+            startCode,
+            targetCode,
+            (c) => getPrev(c)?.from,
+            (c) => getPrev(c)?.move,
+          ),
+        }
+      }
+
+      queue.push(nextCode)
+    }
+  }
+
+  return {
+    ok: false,
+    error:
+      'No solution: the target pins cannot be reached without pushing a pin past the edge.',
+  }
+}
+
+function solveWithTypedArrays(
+  startCode: number,
+  targetCode: number,
+  gateCount: number,
+  pow: number[],
+  moveDeltas: number[][],
+): SolveResult {
+  const stateCount = HOLE_COUNT ** gateCount
+  const visited = new Uint8Array(stateCount)
+  const prevState = new Int32Array(stateCount)
+  const prevMove = new Int8Array(stateCount)
+
+  return bfsCore(
+    startCode,
+    targetCode,
+    gateCount,
+    pow,
+    moveDeltas,
+    {
+      has: (code) => visited[code] === 1,
+      add: (code) => {
+        visited[code] = 1
+      },
+    },
+    (code, from, move) => {
+      prevState[code] = from
+      prevMove[code] = move
+    },
+    (code) => ({ from: prevState[code], move: prevMove[code] }),
+  )
+}
+
+function solveWithSparseMaps(
+  startCode: number,
+  targetCode: number,
+  gateCount: number,
+  pow: number[],
+  moveDeltas: number[][],
+): SolveResult {
+  const visited = new Set<number>([startCode])
+  const prev = new Map<number, { from: number; move: number }>()
+
+  return bfsCore(
+    startCode,
+    targetCode,
+    gateCount,
+    pow,
+    moveDeltas,
+    {
+      has: (code) => visited.has(code),
+      add: (code) => {
+        visited.add(code)
+      },
+    },
+    (code, from, move) => {
+      prev.set(code, { from, move })
+    },
+    (code) => prev.get(code),
+  )
+}
+
 // Breadth-first search over the bounded state space. Pins cannot wrap around the
 // edges, so a move is only legal when every affected pin stays within holes 1-7.
 // BFS guarantees the returned sequence has the fewest possible clicks.
 export function solveLock(state: GameState): SolveResult {
-  const gateCount = state.gateCount ?? CARD_COUNT
+  const gateCount = state.gateCount ?? DEFAULT_GATE_COUNT
 
   const positions: number[] = []
   const targets: number[] = []
@@ -57,16 +221,9 @@ export function solveLock(state: GameState): SolveResult {
     targets.push(card.correctPin)
   }
 
-  const MOVE_COUNT = gateCount * 2
-  const POW = Array.from({ length: gateCount }, (_, i) => HOLE_COUNT ** i)
-  const STATE_COUNT = HOLE_COUNT ** gateCount
-
-  let startCode = 0
-  let targetCode = 0
-  for (let i = 0; i < gateCount; i++) {
-    startCode += positions[i] * POW[i]
-    targetCode += targets[i] * POW[i]
-  }
+  const pow = buildPowers(gateCount)
+  const startCode = encodeState(positions, pow)
+  const targetCode = encodeState(targets, pow)
 
   if (startCode === targetCode) {
     return { ok: true, moves: [] }
@@ -74,65 +231,11 @@ export function solveLock(state: GameState): SolveResult {
 
   const moveDeltas = buildMoveDeltas(state.links, gateCount)
 
-  const visited = new Uint8Array(STATE_COUNT)
-  const prevState = new Int32Array(STATE_COUNT)
-  const prevMove = new Int8Array(STATE_COUNT)
-  const queue = new Int32Array(STATE_COUNT)
-  let head = 0
-  let tail = 0
-
-  visited[startCode] = 1
-  queue[tail++] = startCode
-
-  const current = new Array<number>(gateCount)
-
-  while (head < tail) {
-    const code = queue[head++]
-
-    for (let i = 0; i < gateCount; i++) {
-      current[i] = Math.floor(code / POW[i]) % HOLE_COUNT
-    }
-
-    for (let m = 0; m < MOVE_COUNT; m++) {
-      const row = moveDeltas[m]
-      let legal = true
-      let nextCode = 0
-
-      for (let i = 0; i < gateCount; i++) {
-        const value = current[i] + row[i]
-        if (value < 0 || value >= HOLE_COUNT) {
-          legal = false
-          break
-        }
-        nextCode += value * POW[i]
-      }
-
-      if (!legal || visited[nextCode]) continue
-
-      visited[nextCode] = 1
-      prevState[nextCode] = code
-      prevMove[nextCode] = m
-
-      if (nextCode === targetCode) {
-        const moves: SolveMove[] = []
-        let s = nextCode
-        while (s !== startCode) {
-          moves.push(moveToSolveMove(prevMove[s]))
-          s = prevState[s]
-        }
-        moves.reverse()
-        return { ok: true, moves }
-      }
-
-      queue[tail++] = nextCode
-    }
+  if (gateCount >= SPARSE_BFS_GATE_COUNT) {
+    return solveWithSparseMaps(startCode, targetCode, gateCount, pow, moveDeltas)
   }
 
-  return {
-    ok: false,
-    error:
-      'No solution: the target pins cannot be reached without pushing a pin past the edge.',
-  }
+  return solveWithTypedArrays(startCode, targetCode, gateCount, pow, moveDeltas)
 }
 
 export function formatMove(move: SolveMove): string {

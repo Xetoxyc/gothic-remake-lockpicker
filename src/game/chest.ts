@@ -1,7 +1,8 @@
 import type { SolveMove } from './solver'
 import {
-  CARD_COUNT,
   clampGateCount,
+  CARD_COUNT,
+  DEFAULT_GATE_COUNT,
   createEmptyCard,
   type GameState,
   type LinkType,
@@ -28,7 +29,7 @@ export function gameStateToChest(
   state: GameState,
   solutionMoves?: SolveMove[],
 ): ChestRecord {
-  const gateCount = clampGateCount(state.gateCount ?? CARD_COUNT)
+  const gateCount = clampGateCount(state.gateCount ?? DEFAULT_GATE_COUNT)
 
   const chest: ChestRecord = {
     name: name.trim(),

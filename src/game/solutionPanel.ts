@@ -33,10 +33,7 @@ export function renderSolution(container: HTMLElement, result: SolveResult): voi
     return
   }
 
-  const total = result.moves.length
   const runs = groupMoves(result.moves)
-
-  const header = `<li class="solution-summary">Shortest solution: ${total} click${total === 1 ? '' : 's'}</li>`
 
   const steps = runs
     .map((run, index) => {
@@ -46,5 +43,5 @@ export function renderSolution(container: HTMLElement, result: SolveResult): voi
     })
     .join('')
 
-  container.innerHTML = header + steps
+  container.innerHTML = steps
 }
