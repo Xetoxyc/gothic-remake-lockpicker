@@ -136,5 +136,5 @@ export function solveLock(state: GameState): SolveResult {
 }
 
 export function formatMove(move: SolveMove): string {
-  return `${move.card} - ${move.direction}`
+  return `Gate ${move.card} — ${move.direction}`
 }

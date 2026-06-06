@@ -132,6 +132,7 @@ export function mountChestPanel(container: HTMLElement, options: ChestPanelOptio
   container.innerHTML = `
     <section class="chest-panel">
       <h2>Chests</h2>
+      <p class="panel-hint">Save and reload lock setups by name.</p>
       <label class="chest-field">
         <span>Name</span>
         <input id="chest-name" type="text" placeholder="Chest name" />

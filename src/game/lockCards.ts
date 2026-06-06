@@ -38,7 +38,7 @@ function renderLinkCell(
   link: LinkType,
 ): string {
   const isSelf = cardIndex === targetIndex
-  const label = isSelf ? '—' : linkLabel(link)
+  const label = isSelf ? '—' : linkLabel(link) || '·'
 
   return `
     <button
@@ -59,10 +59,11 @@ function renderLinkGrid(cardIndex: number, links: LinkType[][], gateCount: numbe
   ).join('')
 
   return `
-    <div class="link-grid" aria-label="Card ${cardIndex + 1} links">
+    <div class="link-grid" aria-label="Gate ${cardIndex + 1} links to other gates">
+      <span class="link-grid-title">Links</span>
       <div class="link-grid-cells">${cells}</div>
       <div class="link-grid-labels">
-        ${Array.from({ length: gateCount }, (_, i) => `<span>${i + 1}</span>`).join('')}
+        ${Array.from({ length: gateCount }, (_, i) => `<span title="Gate ${i + 1}">${i + 1}</span>`).join('')}
       </div>
     </div>
   `
@@ -80,9 +81,9 @@ function renderCard(
 
   return `
     <article class="card" data-card="${cardIndex}">
-      <header class="card-label">${cardIndex + 1}</header>
+      <header class="card-label" title="Gate ${cardIndex + 1}">${cardIndex + 1}</header>
       <div class="card-face">
-        <div class="holes">${holes}</div>
+        <div class="holes" aria-label="Gate ${cardIndex + 1} holes">${holes}</div>
       </div>
       ${renderLinkGrid(cardIndex, links, gateCount)}
     </article>
@@ -132,7 +133,7 @@ function updateLinkCells(cardEl: HTMLElement, cardIndex: number, links: LinkType
   cardEl.querySelectorAll<HTMLButtonElement>('.link-cell:not(.link-cell--disabled)').forEach((cell) => {
     const targetIndex = Number(cell.dataset.target)
     const link = links[cardIndex][targetIndex]
-    cell.textContent = linkLabel(link)
+    cell.textContent = linkLabel(link) || '·'
     cell.title = `${link || 'none'} → ${targetIndex + 1}`
     cell.setAttribute('aria-label', `Card ${cardIndex + 1} link to ${targetIndex + 1}: ${link}`)
   })
@@ -168,10 +169,7 @@ export function mountLockCards(
         .map((card, index) => renderCard(index, card, links, gateCount))
         .join('')}
     </div>
-    <button type="button" id="solve-btn" class="solve-btn">Solve</button>
-    <p class="card-hint">
-      Click hole: start pin (inner). Right-click: correct pin (outer). Link grid: ∅ / S / O.
-    </p>
+    <button type="button" id="solve-btn" class="solve-btn">Solve lock</button>
   `
 
   container.querySelector<HTMLButtonElement>('#solve-btn')?.addEventListener(
