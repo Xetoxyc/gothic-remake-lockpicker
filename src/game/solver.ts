@@ -85,34 +85,98 @@ function bfsCore(
   record: (code: number, from: number, move: number) => void,
   getPrev: (code: number) => { from: number; move: number } | undefined,
 ): SolveResult {
+  type Node = {
+    code: number
+    lastGate: number | null
+    switches: number
+  }
+
   const moveCount = gateCount * 2
-  const queue: number[] = [startCode]
-  let head = 0
+
+  let currentLayer: Node[] = [
+    {
+      code: startCode,
+      lastGate: null,
+      switches: 0,
+    },
+  ]
 
   visited.add(startCode)
 
-  while (head < queue.length) {
-    const code = queue[head++]
-    const current = decodeState(code, gateCount, pow)
+  while (currentLayer.length > 0) {
+    const nextLayer: Node[] = []
 
-    for (let m = 0; m < moveCount; m++) {
-      const row = moveDeltas[m]
-      let legal = true
-      let nextCode = 0
-
-      for (let i = 0; i < gateCount; i++) {
-        const value = current[i] + row[i]
-        if (value < 0 || value >= HOLE_COUNT) {
-          legal = false
-          break
-        }
-        nextCode += value * pow[i]
+    /**
+     * For states discovered in THIS layer:
+     * keep only the variant with the fewest switches.
+     */
+    const layerBest = new Map<
+      number,
+      {
+        from: number
+        move: number
+        switches: number
+        lastGate: number
       }
+    >()
 
-      if (!legal || visited.has(nextCode)) continue
+    for (const node of currentLayer) {
+      const current = decodeState(node.code, gateCount, pow)
 
+      for (let m = 0; m < moveCount; m++) {
+        const row = moveDeltas[m]
+
+        let legal = true
+        let nextCode = 0
+
+        for (let i = 0; i < gateCount; i++) {
+          const value = current[i] + row[i]
+
+          if (value < 0 || value >= HOLE_COUNT) {
+            legal = false
+            break
+          }
+
+          nextCode += value * pow[i]
+        }
+
+        if (!legal) continue
+
+        // Already reached in a previous BFS depth.
+        if (visited.has(nextCode)) continue
+
+        const gate = (m >> 1) + 1
+
+        const newSwitches =
+          node.lastGate !== null && node.lastGate !== gate
+            ? node.switches + 1
+            : node.switches
+
+        const existing = layerBest.get(nextCode)
+
+        if (
+          !existing ||
+          newSwitches < existing.switches
+        ) {
+          layerBest.set(nextCode, {
+            from: node.code,
+            move: m,
+            switches: newSwitches,
+            lastGate: gate,
+          })
+        }
+      }
+    }
+
+    // Commit the best candidates of this depth.
+    for (const [nextCode, info] of layerBest.entries()) {
       visited.add(nextCode)
-      record(nextCode, code, m)
+
+      record(
+        nextCode,
+        info.from,
+        info.move,
+      )
 
       if (nextCode === targetCode) {
         return {
@@ -126,8 +190,14 @@ function bfsCore(
         }
       }
 
-      queue.push(nextCode)
+      nextLayer.push({
+        code: nextCode,
+        lastGate: info.lastGate,
+        switches: info.switches,
+      })
     }
+
+    currentLayer = nextLayer
   }
 
   return {
