@@ -9,16 +9,20 @@ import { clampGateCount, createGameState } from './game/types'
 const state = createGameState()
 let cachedSolutionMoves: SolveMove[] | undefined
 
+type TabId = 'setup' | 'solution'
+
+const MOBILE_MQ = window.matchMedia('(max-width: 767px)')
+
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<main class="layout">
+<main class="layout" data-active-tab="setup">
   <section class="game-area" aria-label="Game area">
     <header class="app-header">
       <h1 class="app-title">Gothic Lockpick Solver</h1>
       <p class="app-subtitle">Set up a lock, then press <strong>Solve</strong> for the shortest click sequence.</p>
     </header>
 
-    <section class="help-panel" aria-label="How to use">
-      <h2 class="help-title">How it works</h2>
+    <details class="help-panel" aria-label="How to use">
+      <summary class="help-title">How it works</summary>
       <div class="help-grid">
         <div class="help-item">
           <h3>Holes (1–7)</h3>
@@ -26,11 +30,13 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <ul class="help-legend">
             <li>
               <span class="legend-swatch legend-swatch--start" aria-hidden="true"></span>
-              <span><strong>Start pin</strong> — left-click a hole (gold inner ring)</span>
+              <span class="help-desktop-only"><strong>Start pin</strong> — left-click a hole (gold inner ring)</span>
+              <span class="help-mobile-only"><strong>Start pin</strong> — select Start mode, then tap a hole (gold inner ring)</span>
             </li>
             <li>
               <span class="legend-swatch legend-swatch--target" aria-hidden="true"></span>
-              <span><strong>Target pin</strong> — right-click a hole (green outer ring). New gates default to hole 4.</span>
+              <span class="help-desktop-only"><strong>Target pin</strong> — right-click a hole (green outer ring). New gates default to hole 4.</span>
+              <span class="help-mobile-only"><strong>Target pin</strong> — select Target mode, then tap a hole (green outer ring). New gates default to hole 4.</span>
             </li>
           </ul>
         </div>
@@ -44,7 +50,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           </ul>
         </div>
       </div>
-    </section>
+    </details>
 
     <label class="gate-select">
       <span>Number of gates</span>
@@ -56,19 +62,58 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </label>
     <div id="lock-cards"></div>
   </section>
-  <aside class="input-list" aria-label="Input list">
-    <div id="chest-panel"></div>
-    <h2>Solution</h2>
-    <p class="panel-hint">Shortest legal move sequence. Consecutive identical presses are grouped.</p>
-    <ul id="inputs"></ul>
+
+  <aside class="sidebar" aria-label="Sidebar">
+    <div class="sidebar-chest">
+      <div id="chest-panel"></div>
+    </div>
+    <div class="sidebar-solution">
+      <h2>Solution</h2>
+      <p class="panel-hint">Shortest legal move sequence. Consecutive identical presses are grouped.</p>
+      <ul id="inputs"></ul>
+    </div>
   </aside>
+
+  <nav class="tab-bar" role="tablist" aria-label="Main">
+    <button type="button" class="tab-btn" role="tab" data-tab="setup" aria-selected="true">Setup</button>
+    <button type="button" class="tab-btn" role="tab" data-tab="solution" aria-selected="false">Solution</button>
+  </nav>
 </main>
 `
 
+const layoutEl = document.querySelector<HTMLDivElement>('.layout')!
 const lockCardsEl = document.querySelector<HTMLDivElement>('#lock-cards')!
 const chestPanelEl = document.querySelector<HTMLDivElement>('#chest-panel')!
 const inputsEl = document.querySelector<HTMLUListElement>('#inputs')!
 const gateCountEl = document.querySelector<HTMLSelectElement>('#gate-count')!
+const helpPanelEl = document.querySelector<HTMLDetailsElement>('.help-panel')!
+const tabButtons = document.querySelectorAll<HTMLButtonElement>('.tab-bar [role="tab"]')
+
+function isMobileLayout(): boolean {
+  return MOBILE_MQ.matches
+}
+
+function setActiveTab(tab: TabId): void {
+  layoutEl.dataset.activeTab = tab
+  tabButtons.forEach((btn) => {
+    const selected = btn.dataset.tab === tab
+    btn.setAttribute('aria-selected', String(selected))
+    btn.classList.toggle('tab-btn--active', selected)
+  })
+
+  if (tab === 'setup') {
+    layoutEl.scrollTo(0, 0)
+  } else {
+    document.querySelector<HTMLElement>('.sidebar-solution')?.scrollTo(0, 0)
+  }
+}
+
+function syncHelpPanelOpen(): void {
+  if (!helpPanelEl) return
+  if (!isMobileLayout()) {
+    helpPanelEl.setAttribute('open', '')
+  }
+}
 
 function syncGateSelect(): void {
   gateCountEl.value = String(clampGateCount(state.gateCount))
@@ -92,6 +137,11 @@ function handleChestLoad(chest?: ChestRecord): void {
 async function runSolve(): Promise<void> {
   const result = solveLock(state)
   renderSolution(inputsEl, result)
+
+  if (result.ok && isMobileLayout()) {
+    setActiveTab('solution')
+  }
+
   if (!result.ok) return
 
   cachedSolutionMoves = result.moves
@@ -109,6 +159,12 @@ function remountCards(): void {
   })
 }
 
+tabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    setActiveTab(btn.dataset.tab as TabId)
+  })
+})
+
 gateCountEl.addEventListener('change', () => {
   state.gateCount = clampGateCount(Number(gateCountEl.value))
   cachedSolutionMoves = undefined
@@ -116,7 +172,11 @@ gateCountEl.addEventListener('change', () => {
   remountCards()
 })
 
+MOBILE_MQ.addEventListener('change', syncHelpPanelOpen)
+
+syncHelpPanelOpen()
 syncGateSelect()
+setActiveTab('setup')
 remountCards()
 
 mountChestPanel(chestPanelEl, {

@@ -7,6 +7,15 @@ import {
   type LinkType,
 } from './types'
 
+type PinField = 'startPin' | 'correctPin'
+
+const MOBILE_MQ = window.matchMedia('(max-width: 767px)')
+let touchPinMode: PinField = 'startPin'
+
+function isMobileLayout(): boolean {
+  return MOBILE_MQ.matches
+}
+
 function renderHole(
   cardIndex: number,
   holeIndex: number,
@@ -94,7 +103,7 @@ function setPin(
   cards: CardState[],
   cardIndex: number,
   holeIndex: number,
-  pin: 'startPin' | 'correctPin',
+  pin: PinField,
 ): void {
   const card = cards[cardIndex]
   const next = card[pin] === holeIndex ? null : holeIndex
@@ -103,6 +112,13 @@ function setPin(
   if (pin === 'startPin') {
     card.currentPin = next
   }
+}
+
+function updatePinModeButtons(container: HTMLElement): void {
+  const startBtn = container.querySelector<HTMLButtonElement>('[data-pin-mode="start"]')
+  const targetBtn = container.querySelector<HTMLButtonElement>('[data-pin-mode="target"]')
+  startBtn?.classList.toggle('pin-mode-btn--active', touchPinMode === 'startPin')
+  targetBtn?.classList.toggle('pin-mode-btn--active', touchPinMode === 'correctPin')
 }
 
 function updateHoleRings(cardEl: HTMLElement, card: CardState): void {
@@ -155,14 +171,15 @@ export function mountLockCards(
   const onChange = typeof options === 'function' ? options : options.onChange
   const onSolve = typeof options === 'function' ? undefined : options.onSolve
 
-  // Each remount replaces innerHTML but listeners on the container persist.
-  // Abort the previous mount so clicks are not handled twice (which would
-  // toggle a pin on and immediately back off).
   mountController?.abort()
   mountController = new AbortController()
   const { signal } = mountController
 
   container.innerHTML = `
+    <div class="pin-mode" role="group" aria-label="Pin mode">
+      <button type="button" class="pin-mode-btn pin-mode-btn--start pin-mode-btn--active" data-pin-mode="start">Start</button>
+      <button type="button" class="pin-mode-btn pin-mode-btn--target" data-pin-mode="target">Target</button>
+    </div>
     <div class="cards-grid">
       ${cards
         .slice(0, gateCount)
@@ -171,6 +188,19 @@ export function mountLockCards(
     </div>
     <button type="button" id="solve-btn" class="solve-btn">Solve lock</button>
   `
+
+  updatePinModeButtons(container)
+
+  container.querySelectorAll<HTMLButtonElement>('.pin-mode-btn').forEach((btn) => {
+    btn.addEventListener(
+      'click',
+      () => {
+        touchPinMode = btn.dataset.pinMode === 'target' ? 'correctPin' : 'startPin'
+        updatePinModeButtons(container)
+      },
+      { signal },
+    )
+  })
 
   container.querySelector<HTMLButtonElement>('#solve-btn')?.addEventListener(
     'click',
@@ -183,25 +213,26 @@ export function mountLockCards(
   container.addEventListener(
     'click',
     (event) => {
-    const target = event.target as HTMLElement
+      const target = event.target as HTMLElement
 
-    const linkCell = target.closest<HTMLButtonElement>('.link-cell:not(.link-cell--disabled)')
-    if (linkCell) {
-      const cardIndex = Number(linkCell.dataset.card)
-      const targetIndex = Number(linkCell.dataset.target)
-      links[cardIndex][targetIndex] = nextLinkType(links[cardIndex][targetIndex])
+      const linkCell = target.closest<HTMLButtonElement>('.link-cell:not(.link-cell--disabled)')
+      if (linkCell) {
+        const cardIndex = Number(linkCell.dataset.card)
+        const targetIndex = Number(linkCell.dataset.target)
+        links[cardIndex][targetIndex] = nextLinkType(links[cardIndex][targetIndex])
+        onChange()
+        return
+      }
+
+      const hole = target.closest<HTMLButtonElement>('.hole')
+      if (!hole) return
+
+      const cardIndex = Number(hole.dataset.card)
+      const holeIndex = Number(hole.dataset.hole)
+      const pin: PinField = isMobileLayout() ? touchPinMode : 'startPin'
+      setPin(cards, cardIndex, holeIndex, pin)
       onChange()
-      return
-    }
-
-    const hole = target.closest<HTMLButtonElement>('.hole')
-    if (!hole) return
-
-    const cardIndex = Number(hole.dataset.card)
-    const holeIndex = Number(hole.dataset.hole)
-    setPin(cards, cardIndex, holeIndex, 'startPin')
-    onChange()
-  },
+    },
     { signal },
   )
 
@@ -223,6 +254,8 @@ export function mountLockCards(
 
 export function updateLockCards(container: HTMLElement, state: GameState): void {
   const { cards, links, gateCount } = state
+
+  updatePinModeButtons(container)
 
   cards.slice(0, gateCount).forEach((card, cardIndex) => {
     const cardEl = container.querySelector<HTMLElement>(`.card[data-card="${cardIndex}"]`)
