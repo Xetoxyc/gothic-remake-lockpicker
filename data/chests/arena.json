@@ -1,5 +1,6 @@
 {
   "name": "Arena",
+  "gateCount": 6,
   "initialPins": [
     1,
     2,

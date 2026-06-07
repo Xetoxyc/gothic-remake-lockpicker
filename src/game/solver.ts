@@ -239,5 +239,7 @@ export function solveLock(state: GameState): SolveResult {
 }
 
 export function formatMove(move: SolveMove): string {
-  return `Gate ${move.card} — ${move.direction}`
+  const direction =
+    move.direction === 'left' ? 'Left (A)' : 'Right (D)'
+  return `Gate ${move.card} — ${direction}`
 }

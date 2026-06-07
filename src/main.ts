@@ -4,7 +4,7 @@ import { mountChestPanel, saveChestFromPanel } from './game/chestPanel'
 import { mountLockCards, updateLockCards } from './game/lockCards'
 import { solveLock, type SolveMove } from './game/solver'
 import { renderSolution } from './game/solutionPanel'
-import { clampGateCount, createGameState } from './game/types'
+import { clampGateCount, createGameState, resetGameState } from './game/types'
 
 const state = createGameState()
 let cachedSolutionMoves: SolveMove[] | undefined
@@ -24,6 +24,21 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <details class="help-panel" aria-label="How to use">
       <summary class="help-title">How it works</summary>
       <div class="help-grid">
+        <div class="help-item help-item--wide">
+          <h3>Orientation</h3>
+          <p>In-game, the metal plates stack toward you. <strong>Gate 1</strong> is the plate furthest away; the highest gate number is the front plate where the lockpick enters. This tool lists gates top to bottom in that same order.</p>
+          <p>On each plate, <strong>holes 1–7</strong> run left to right along the top row — match the red labels in the screenshot when setting start and target pins.</p>
+          <figure class="help-figure">
+            <img
+              src="${import.meta.env.BASE_URL}lock-orientation.png"
+              alt="Gothic lock plates numbered 1 through 6 from back to front, with holes 1 through 7 labeled left to right on the rearmost plate"
+              width="794"
+              height="601"
+              loading="lazy"
+            />
+            <figcaption>Gate numbers (1 = back) and hole numbers (1 = left) as shown in-game.</figcaption>
+          </figure>
+        </div>
         <div class="help-item">
           <h3>Holes (1–7)</h3>
           <p>Each gate has seven holes, left to right. Pick where the pin <em>starts</em> and where it must <em>end up</em>.</p>
@@ -52,15 +67,18 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       </div>
     </details>
 
-    <label class="gate-select">
-      <span>Number of gates</span>
-      <select id="gate-count" aria-label="Number of gates">
-        <option value="4">4 gates</option>
-        <option value="5">5 gates</option>
-        <option value="6" selected>6 gates</option>
-        <option value="7">7 gates</option>
-      </select>
-    </label>
+    <div class="gate-toolbar">
+      <label class="gate-select">
+        <span>Number of gates</span>
+        <select id="gate-count" aria-label="Number of gates">
+          <option value="4">4 gates</option>
+          <option value="5">5 gates</option>
+          <option value="6" selected>6 gates</option>
+          <option value="7">7 gates</option>
+        </select>
+      </label>
+      <button type="button" id="reset-lock" class="reset-btn">Reset</button>
+    </div>
     <div id="lock-cards"></div>
   </section>
 
@@ -70,7 +88,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
     <div class="sidebar-solution">
       <h2>Solution</h2>
-      <p class="panel-hint">Shortest legal move sequence. Consecutive identical presses are grouped.</p>
+      <p class="panel-hint">Shortest legal move sequence. In-game: Left (A), Right (D). Consecutive identical presses are grouped.</p>
       <ul id="inputs"></ul>
     </div>
   </aside>
@@ -87,7 +105,7 @@ const lockCardsEl = document.querySelector<HTMLDivElement>('#lock-cards')!
 const chestPanelEl = document.querySelector<HTMLDivElement>('#chest-panel')!
 const inputsEl = document.querySelector<HTMLUListElement>('#inputs')!
 const gateCountEl = document.querySelector<HTMLSelectElement>('#gate-count')!
-const helpPanelEl = document.querySelector<HTMLDetailsElement>('.help-panel')!
+const resetLockEl = document.querySelector<HTMLButtonElement>('#reset-lock')!
 const tabButtons = document.querySelectorAll<HTMLButtonElement>('.tab-bar [role="tab"]')
 
 function isMobileLayout(): boolean {
@@ -106,13 +124,6 @@ function setActiveTab(tab: TabId): void {
     layoutEl.scrollTo(0, 0)
   } else {
     document.querySelector<HTMLElement>('.sidebar-solution')?.scrollTo(0, 0)
-  }
-}
-
-function syncHelpPanelOpen(): void {
-  if (!helpPanelEl) return
-  if (!isMobileLayout()) {
-    helpPanelEl.setAttribute('open', '')
   }
 }
 
@@ -166,6 +177,13 @@ tabButtons.forEach((btn) => {
   })
 })
 
+function resetLock(): void {
+  resetGameState(state)
+  cachedSolutionMoves = undefined
+  inputsEl.innerHTML = ''
+  remountCards()
+}
+
 gateCountEl.addEventListener('change', () => {
   state.gateCount = clampGateCount(Number(gateCountEl.value))
   cachedSolutionMoves = undefined
@@ -173,9 +191,8 @@ gateCountEl.addEventListener('change', () => {
   remountCards()
 })
 
-MOBILE_MQ.addEventListener('change', syncHelpPanelOpen)
+resetLockEl.addEventListener('click', resetLock)
 
-syncHelpPanelOpen()
 syncGateSelect()
 setActiveTab('setup')
 remountCards()

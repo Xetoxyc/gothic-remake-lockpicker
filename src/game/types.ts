@@ -48,6 +48,13 @@ export function createGameState(): GameState {
   }
 }
 
+export function resetGameState(state: GameState): void {
+  const gateCount = state.gateCount
+  state.cards = createEmptyCards()
+  state.links = createEmptyLinks()
+  state.gateCount = gateCount
+}
+
 export function clampGateCount(value: number): number {
   if (!Number.isFinite(value)) return DEFAULT_GATE_COUNT
   return Math.min(MAX_GATE_COUNT, Math.max(MIN_GATE_COUNT, Math.round(value)))

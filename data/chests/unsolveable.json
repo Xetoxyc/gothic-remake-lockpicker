@@ -1,0 +1,117 @@
+{
+  "name": "unsolveable ?",
+  "gateCount": 5,
+  "initialPins": [
+    1,
+    5,
+    7,
+    1,
+    5
+  ],
+  "solutionPins": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "links": [
+    [
+      "none",
+      "same",
+      "none",
+      "opposite",
+      "none"
+    ],
+    [
+      "none",
+      "none",
+      "none",
+      "none",
+      "opposite"
+    ],
+    [
+      "none",
+      "none",
+      "none",
+      "none",
+      "same"
+    ],
+    [
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+    ],
+    [
+      "none",
+      "same",
+      "none",
+      "opposite",
+      "none"
+    ]
+  ],
+  "solutionMoves": [
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 1,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    }
+  ]
+}
