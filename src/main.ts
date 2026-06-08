@@ -3,11 +3,13 @@ import type { ChestRecord } from './game/chest'
 import { mountChestPanel, saveChestFromPanel } from './game/chestPanel'
 import { mountLockCards, updateLockCards } from './game/lockCards'
 import { solveLock, type SolveMove } from './game/solver'
-import { renderSolution } from './game/solutionPanel'
+import { renderSolution, solutionViewHint, type SolutionView } from './game/solutionPanel'
 import { clampGateCount, createGameState, resetGameState } from './game/types'
 
 const state = createGameState()
 let cachedSolutionMoves: SolveMove[] | undefined
+let cachedSolutionResult: ReturnType<typeof solveLock> | undefined
+let solutionView: SolutionView = 'moves'
 
 type TabId = 'setup' | 'solution'
 
@@ -87,8 +89,20 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div id="chest-panel"></div>
     </div>
     <div class="sidebar-solution">
-      <h2>Solution</h2>
-      <p class="panel-hint">Shortest legal move sequence. In-game: Left (A), Right (D). Consecutive identical presses are grouped.</p>
+      <div class="solution-header">
+        <h2>Solution</h2>
+        <div class="solution-view-toggle" role="radiogroup" aria-label="Solution format">
+          <label class="solution-view-option">
+            <input type="radio" name="solution-view" value="moves" checked />
+            <span>Moves</span>
+          </label>
+          <label class="solution-view-option">
+            <input type="radio" name="solution-view" value="input" />
+            <span>Input chain</span>
+          </label>
+        </div>
+      </div>
+      <p class="panel-hint" id="solution-hint"></p>
       <ul id="inputs"></ul>
     </div>
   </aside>
@@ -104,6 +118,10 @@ const layoutEl = document.querySelector<HTMLDivElement>('.layout')!
 const lockCardsEl = document.querySelector<HTMLDivElement>('#lock-cards')!
 const chestPanelEl = document.querySelector<HTMLDivElement>('#chest-panel')!
 const inputsEl = document.querySelector<HTMLUListElement>('#inputs')!
+const solutionHintEl = document.querySelector<HTMLParagraphElement>('#solution-hint')!
+const solutionViewInputs = document.querySelectorAll<HTMLInputElement>(
+  '.solution-view-toggle input[name="solution-view"]',
+)
 const gateCountEl = document.querySelector<HTMLSelectElement>('#gate-count')!
 const resetLockEl = document.querySelector<HTMLButtonElement>('#reset-lock')!
 const tabButtons = document.querySelectorAll<HTMLButtonElement>('.tab-bar [role="tab"]')
@@ -135,20 +153,35 @@ function refreshCards(): void {
   updateLockCards(lockCardsEl, state)
 }
 
+function syncSolutionHint(): void {
+  solutionHintEl.textContent = solutionViewHint(solutionView)
+}
+
+function renderCachedSolution(): void {
+  if (!cachedSolutionResult) {
+    inputsEl.innerHTML = ''
+    return
+  }
+
+  renderSolution(inputsEl, cachedSolutionResult, {
+    view: solutionView,
+    gateCount: clampGateCount(state.gateCount),
+  })
+}
+
 function handleChestLoad(chest?: ChestRecord): void {
   cachedSolutionMoves = chest?.solutionMoves
+  cachedSolutionResult =
+    cachedSolutionMoves !== undefined ? { ok: true, moves: cachedSolutionMoves } : undefined
   syncGateSelect()
   remountCards()
-  if (cachedSolutionMoves !== undefined) {
-    renderSolution(inputsEl, { ok: true, moves: cachedSolutionMoves })
-  } else {
-    inputsEl.innerHTML = ''
-  }
+  renderCachedSolution()
 }
 
 async function runSolve(): Promise<void> {
   const result = solveLock(state)
-  renderSolution(inputsEl, result)
+  cachedSolutionResult = result
+  renderCachedSolution()
 
   if (result.ok && isMobileLayout()) {
     setActiveTab('solution')
@@ -180,6 +213,7 @@ tabButtons.forEach((btn) => {
 function resetLock(): void {
   resetGameState(state)
   cachedSolutionMoves = undefined
+  cachedSolutionResult = undefined
   inputsEl.innerHTML = ''
   remountCards()
 }
@@ -187,13 +221,24 @@ function resetLock(): void {
 gateCountEl.addEventListener('change', () => {
   state.gateCount = clampGateCount(Number(gateCountEl.value))
   cachedSolutionMoves = undefined
+  cachedSolutionResult = undefined
   inputsEl.innerHTML = ''
   remountCards()
+})
+
+solutionViewInputs.forEach((input) => {
+  input.addEventListener('change', () => {
+    if (!input.checked) return
+    solutionView = input.value as SolutionView
+    syncSolutionHint()
+    renderCachedSolution()
+  })
 })
 
 resetLockEl.addEventListener('click', resetLock)
 
 syncGateSelect()
+syncSolutionHint()
 setActiveTab('setup')
 remountCards()
 
