@@ -1,0 +1,151 @@
+{
+  "name": "Undead Orc Flooded Mine Caine Quest",
+  "gateCount": 5,
+  "initialPins": [1, 5, 6, 5, 4],
+  "solutionPins": [4, 4, 4, 4, 4],
+  "links": [
+    ["none", "none", "none", "opposite", "same"],
+    ["opposite", "none", "opposite", "none", "none"],
+    ["none", "none", "none", "same", "opposite"],
+    ["opposite", "none", "opposite", "none", "same"],
+    ["none", "opposite", "none", "none", "none"]
+  ],
+  "solutionMoves": [
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 4,
+      "direction": "left"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 1,
+      "direction": "right"
+    },
+    {
+      "card": 1,
+      "direction": "right"
+    },
+    {
+      "card": 1,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 3,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 2,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    },
+    {
+      "card": 5,
+      "direction": "right"
+    }
+  ]
+}
