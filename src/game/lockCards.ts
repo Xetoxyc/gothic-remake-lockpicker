@@ -62,7 +62,12 @@ function renderLinkCell(
   `
 }
 
-function renderLinkGrid(cardIndex: number, links: LinkType[][], gateCount: number): string {
+function renderLinkGrid(
+  cardIndex: number,
+  links: LinkType[][],
+  gateCount: number,
+  noLinks: boolean,
+): string {
   const cells = Array.from({ length: gateCount }, (_, targetIndex) =>
     renderLinkCell(cardIndex, targetIndex, links[cardIndex][targetIndex]),
   ).join('')
@@ -74,6 +79,13 @@ function renderLinkGrid(cardIndex: number, links: LinkType[][], gateCount: numbe
       <div class="link-grid-labels">
         ${Array.from({ length: gateCount }, (_, i) => `<span title="Gate ${i + 1}">${i + 1}</span>`).join('')}
       </div>
+      <button
+        type="button"
+        class="link-none-btn${noLinks ? ' link-none-btn--active' : ''}"
+        data-card="${cardIndex}"
+        aria-pressed="${noLinks}"
+        title="Mark gate ${cardIndex + 1} as having no links"
+      >No links</button>
     </div>
   `
 }
@@ -94,7 +106,7 @@ function renderCard(
       <div class="card-face">
         <div class="holes" aria-label="Gate ${cardIndex + 1} holes">${holes}</div>
       </div>
-      ${renderLinkGrid(cardIndex, links, gateCount)}
+      ${renderLinkGrid(cardIndex, links, gateCount, card.noLinks)}
     </article>
   `
 }
@@ -145,7 +157,12 @@ function updateHoleRings(cardEl: HTMLElement, card: CardState): void {
   })
 }
 
-function updateLinkCells(cardEl: HTMLElement, cardIndex: number, links: LinkType[][]): void {
+function updateLinkCells(
+  cardEl: HTMLElement,
+  cardIndex: number,
+  links: LinkType[][],
+  noLinks: boolean,
+): void {
   cardEl.querySelectorAll<HTMLButtonElement>('.link-cell:not(.link-cell--disabled)').forEach((cell) => {
     const targetIndex = Number(cell.dataset.target)
     const link = links[cardIndex][targetIndex]
@@ -153,6 +170,12 @@ function updateLinkCells(cardEl: HTMLElement, cardIndex: number, links: LinkType
     cell.title = `${link || 'none'} → ${targetIndex + 1}`
     cell.setAttribute('aria-label', `Card ${cardIndex + 1} link to ${targetIndex + 1}: ${link}`)
   })
+
+  const noLinksBtn = cardEl.querySelector<HTMLButtonElement>('.link-none-btn')
+  if (noLinksBtn) {
+    noLinksBtn.classList.toggle('link-none-btn--active', noLinks)
+    noLinksBtn.setAttribute('aria-pressed', String(noLinks))
+  }
 }
 
 type LockCardsOptions = {
@@ -220,6 +243,24 @@ export function mountLockCards(
         const cardIndex = Number(linkCell.dataset.card)
         const targetIndex = Number(linkCell.dataset.target)
         links[cardIndex][targetIndex] = nextLinkType(links[cardIndex][targetIndex])
+        // Editing links means the gate is being given links, so the deliberate
+        // "no links" marker no longer applies.
+        cards[cardIndex].noLinks = false
+        onChange()
+        return
+      }
+
+      const noLinksBtn = target.closest<HTMLButtonElement>('.link-none-btn')
+      if (noLinksBtn) {
+        const cardIndex = Number(noLinksBtn.dataset.card)
+        const noLinks = !cards[cardIndex].noLinks
+        cards[cardIndex].noLinks = noLinks
+        // Marking a gate as having no links clears any links it may have had.
+        if (noLinks) {
+          for (let targetIndex = 0; targetIndex < gateCount; targetIndex++) {
+            links[cardIndex][targetIndex] = 'none'
+          }
+        }
         onChange()
         return
       }
@@ -262,6 +303,6 @@ export function updateLockCards(container: HTMLElement, state: GameState): void 
     if (!cardEl) return
 
     updateHoleRings(cardEl, card)
-    updateLinkCells(cardEl, cardIndex, links)
+    updateLinkCells(cardEl, cardIndex, links, card.noLinks)
   })
 }

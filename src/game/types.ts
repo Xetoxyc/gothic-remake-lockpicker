@@ -11,6 +11,10 @@ export type CardState = {
   startPin: number | null
   correctPin: number | null
   currentPin: number | null
+  // Deliberate marker set by the user to record that this gate has been
+  // evaluated and has no links to other gates. Defaults to false so it never
+  // appears active until the user explicitly sets it.
+  noLinks: boolean
 }
 
 export type GameState = {
@@ -27,6 +31,7 @@ export function createEmptyCard(): CardState {
     startPin: null,
     correctPin: DEFAULT_SOLUTION_PIN,
     currentPin: null,
+    noLinks: false,
   }
 }
 
