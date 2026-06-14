@@ -16,6 +16,9 @@ export type ChestRecord = {
   initialPins: (number | null)[]
   solutionPins: (number | null)[]
   links?: LinkType[][]
+  // Per-gate deliberate "no links" markers. Optional for backward
+  // compatibility with saves made before the marker existed.
+  noLinks?: boolean[]
   solutionMoves?: SolveMove[]
 }
 
@@ -41,6 +44,7 @@ export function gameStateToChest(
       .slice(0, gateCount)
       .map((card) => (card.correctPin === null ? null : card.correctPin + 1)),
     links: state.links.slice(0, gateCount).map((row) => row.slice(0, gateCount)),
+    noLinks: state.cards.slice(0, gateCount).map((card) => card.noLinks),
   }
 
   if (solutionMoves !== undefined) {
@@ -65,6 +69,7 @@ export function applyChestToGameState(state: GameState, chest: ChestRecord): voi
       state.cards[i].startPin = startIndex
       state.cards[i].currentPin = startIndex
       state.cards[i].correctPin = correctIndex
+      state.cards[i].noLinks = chest.noLinks?.[i] ?? false
     } else {
       // Reset inactive gates to defaults so stale data never leaks in.
       Object.assign(state.cards[i], createEmptyCard())
